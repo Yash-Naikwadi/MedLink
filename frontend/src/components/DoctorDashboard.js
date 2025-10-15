@@ -1,50 +1,65 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FileText, MessageSquare, User, ClipboardCheck } from "lucide-react";
 import "./DoctorDashboard.css";
+import { API_ENDPOINTS, fetchAPI } from "../config/api";
+import { useNavigate } from "react-router-dom";
 
 function DoctorDashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("patients");
   const [selectedReport, setSelectedReport] = useState(null);
   const [diagnosis, setDiagnosis] = useState("");
-  const [history, setHistory] = useState([
-    {
-      patient: "John Doe",
-      report: "Blood Test Report.pdf",
-      date: "01 Oct 2025",
-      feedback: "Blood sugar level improving. Continue medication.",
-    },
-  ]);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const reports = [
-    {
-      patient: "John Doe",
-      reportName: "Blood Test Report.pdf",
-      date: "01 Oct 2025",
-      status: "Shared",
-    },
-    {
-      patient: "Jane Smith",
-      reportName: "ECG Report.pdf",
-      date: "10 Oct 2025",
-      status: "New",
-    },
-  ];
+  useEffect(() => {
+    fetchSharedReports();
+  }, []);
 
-  const handleFeedbackSubmit = (e) => {
+  const fetchSharedReports = async () => {
+    try {
+      const data = await fetchAPI(API_ENDPOINTS.DOCTOR_REPORTS.GET_SHARED);
+      setReports(data.reports || []);
+    } catch (err) {
+      console.error("Error fetching reports:", err);
+    }
+  };
+
+  const handleFeedbackSubmit = async (e) => {
     e.preventDefault();
     if (selectedReport && diagnosis.trim() !== "") {
-      setHistory([
-        ...history,
-        {
-          patient: selectedReport.patient,
-          report: selectedReport.reportName,
-          date: new Date().toLocaleDateString(),
-          feedback: diagnosis,
-        },
-      ]);
-      alert("Diagnosis/Feedback submitted successfully!");
-      setDiagnosis("");
-      setSelectedReport(null);
+      setLoading(true);
+      setError("");
+
+      try {
+        await fetchAPI(API_ENDPOINTS.DOCTOR_REPORTS.ADD_FEEDBACK, {
+          method: "POST",
+          body: JSON.stringify({
+            reportId: selectedReport._id,
+            feedback: diagnosis,
+          }),
+        });
+        alert("Diagnosis/Feedback submitted successfully!");
+        setDiagnosis("");
+        setSelectedReport(null);
+        fetchSharedReports();
+      } catch (err) {
+        setError(err.message || "Failed to submit feedback");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetchAPI(API_ENDPOINTS.DOCTOR_AUTH.LOGOUT, { method: "POST" });
+      localStorage.clear();
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout error:", err);
+      navigate("/login");
     }
   };
 
@@ -60,14 +75,10 @@ function DoctorDashboard() {
           >
             Patients
           </button>
-          <button
-            onClick={() => setActiveTab("history")}
-            className={activeTab === "history" ? "active" : ""}
-          >
-            Diagnosis History
-          </button>
+          <button onClick={handleLogout}>Logout</button>
         </div>
       </nav>
+      {error && <div style={{ color: "red", padding: "1rem" }}>{error}</div>}
 
       {/* 👨‍⚕️ PATIENT REPORTS */}
       {activeTab === "patients" && (
@@ -87,22 +98,32 @@ function DoctorDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {reports.map((report, index) => (
-                  <tr key={index}>
-                    <td>{report.patient}</td>
-                    <td>{report.reportName}</td>
-                    <td>{report.date}</td>
-                    <td>{report.status}</td>
-                    <td>
-                      <button
-                        className="btn-view"
-                        onClick={() => setSelectedReport(report)}
-                      >
-                        <MessageSquare size={16} /> Review
-                      </button>
+                {reports.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" style={{ textAlign: "center" }}>
+                      No reports shared with you yet
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  reports.map((report, index) => (
+                    <tr key={index}>
+                      <td>{report.userId?.email || "N/A"}</td>
+                      <td>{report.fileName || "Report"}</td>
+                      <td>
+                        {new Date(report.createdAt).toLocaleDateString()}
+                      </td>
+                      <td>{report.feedback ? "Reviewed" : "New"}</td>
+                      <td>
+                        <button
+                          className="btn-view"
+                          onClick={() => setSelectedReport(report)}
+                        >
+                          <MessageSquare size={16} /> Review
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -112,7 +133,7 @@ function DoctorDashboard() {
             <div className="modal-bg">
               <div className="modal">
                 <h3>
-                  Review Report - {selectedReport.reportName}
+                  Review Report - {selectedReport.fileName || "Report"}
                 </h3>
                 <form onSubmit={handleFeedbackSubmit}>
                   <textarea
@@ -129,43 +150,14 @@ function DoctorDashboard() {
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="share">
-                      Submit Feedback
+                    <button type="submit" className="share" disabled={loading}>
+                      {loading ? "Submitting..." : "Submit Feedback"}
                     </button>
                   </div>
                 </form>
               </div>
             </div>
           )}
-        </section>
-      )}
-
-      {/* 📋 DIAGNOSIS HISTORY */}
-      {activeTab === "history" && (
-        <section className="history-section">
-          <h2>
-            <ClipboardCheck size={22} /> Diagnosis History
-          </h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Report</th>
-                <th>Date</th>
-                <th>Feedback</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((item, index) => (
-                <tr key={index}>
-                  <td>{item.patient}</td>
-                  <td>{item.report}</td>
-                  <td>{item.date}</td>
-                  <td>{item.feedback}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </section>
       )}
     </div>

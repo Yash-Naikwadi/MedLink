@@ -1,14 +1,96 @@
-import React from "react";
+import React, { useState } from "react";
 import "./Login.css";
 import { RiFilePaper2Line } from "react-icons/ri";
 import { useLocation, useNavigate } from "react-router-dom";
+import { API_ENDPOINTS, fetchAPI } from "../config/api";
 
 const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Determine current mode based on URL
   const isLogin = location.pathname === "/login";
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "",
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError("");
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const endpoint =
+        formData.role === "doctor"
+          ? API_ENDPOINTS.DOCTOR_AUTH.LOGIN
+          : API_ENDPOINTS.AUTH.LOGIN;
+
+      const response = await fetchAPI(endpoint, {
+        method: "POST",
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      localStorage.setItem("userRole", formData.role);
+      localStorage.setItem("userEmail", formData.email);
+
+      if (formData.role === "doctor") {
+        navigate("/doctor-dashboard");
+      } else {
+        navigate("/user-dashboard");
+      }
+    } catch (err) {
+      setError(err.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const endpoint =
+        formData.role === "doctor"
+          ? API_ENDPOINTS.DOCTOR_AUTH.REGISTER
+          : API_ENDPOINTS.AUTH.REGISTER;
+
+      const response = await fetchAPI(endpoint, {
+        method: "POST",
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      alert("Registration successful! Please login.");
+      navigate("/login");
+    } catch (err) {
+      setError(err.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="auth-page">
@@ -60,28 +142,50 @@ const Login = () => {
         </div>
 
         <div className="auth-container">
+          {error && <div style={{ color: "red", marginBottom: "1rem" }}>{error}</div>}
           {isLogin ? (
             <div className="loginform">
               <h2>Welcome Back</h2>
-              <form>
+              <form onSubmit={handleLogin}>
                 <label>
                   Email
-                  <input type="email" placeholder="Enter your email" />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Enter your email"
+                    required
+                  />
                 </label>
                 <label>
                   Password
-                  <input type="password" placeholder="Enter your password" />
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Enter your password"
+                    required
+                  />
                 </label>
                 <label>
                   Select Role
-                  <select>
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    required
+                  >
                     <option value="">-- Select Role --</option>
                     <option value="doctor">Doctor</option>
                     <option value="patient">Patient</option>
                   </select>
                 </label>
                 <a href="#">Forget Password?</a>
-                <button>Login</button>
+                <button type="submit" disabled={loading}>
+                  {loading ? "Logging in..." : "Login"}
+                </button>
               </form>
               <p>
                 Not a Member?{" "}
@@ -99,28 +203,56 @@ const Login = () => {
           ) : (
             <div className="registerform">
               <h2>Create Account</h2>
-              <form>
+              <form onSubmit={handleRegister}>
                 <label>
-                  Username
-                  <input type="text" placeholder="Enter username" />
+                  Email
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Enter email"
+                    required
+                  />
                 </label>
                 <label>
                   Password
-                  <input type="password" placeholder="Enter password" />
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Enter password"
+                    required
+                  />
                 </label>
                 <label>
                   Confirm Password
-                  <input type="password" placeholder="Re-enter password" />
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Re-enter password"
+                    required
+                  />
                 </label>
                 <label>
                   Select Role
-                  <select>
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    required
+                  >
                     <option value="">-- Select Role --</option>
                     <option value="doctor">Doctor</option>
                     <option value="patient">Patient</option>
                   </select>
                 </label>
-                <button>Create Account</button>
+                <button type="submit" disabled={loading}>
+                  {loading ? "Creating Account..." : "Create Account"}
+                </button>
                 <p>
                   Already have an account?{" "}
                   <a
