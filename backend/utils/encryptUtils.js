@@ -15,3 +15,21 @@ export const encryptFile = (filePath, encryptionKey) => {
 
   return encryptedPath;
 };
+
+
+export const decryptFile = (encryptedPath, encryptionKey) => {
+  const input = fs.readFileSync(encryptedPath);
+
+  // Extract IV (first 16 bytes)
+  const iv = input.slice(0, 16);
+  const encryptedData = input.slice(16);
+
+  const decipher = crypto.createDecipheriv("aes-256-cbc", encryptionKey, iv);
+  const decrypted = Buffer.concat([decipher.update(encryptedData), decipher.final()]);
+
+  const decryptedPath = encryptedPath.replace(".enc", ".dec");
+  fs.writeFileSync(decryptedPath, decrypted);
+
+  console.log("✅ File decrypted successfully:", decryptedPath);
+  return decryptedPath;
+};

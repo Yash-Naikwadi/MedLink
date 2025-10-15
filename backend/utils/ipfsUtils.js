@@ -20,3 +20,28 @@ export const uploadToIPFS = async (filePath) => {
     throw err;
   }
 };
+
+
+export const downloadFromIPFS = async (ipfsURL) => {
+  try {
+    const cid = ipfsURL.split("/").pop(); // Extract CID from the URL
+    const stream = client.cat(cid); // Use 'client' instead of 'ipfs'
+    const chunks = [];
+
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+
+    const fileBuffer = Buffer.concat(chunks);
+
+    // Create a temp encrypted file to decrypt later
+    const tempPath = path.join("uploads", `downloaded-${Date.now()}.enc`);
+    fs.writeFileSync(tempPath, fileBuffer);
+
+    console.log("✅ File downloaded from IPFS:", cid);
+    return tempPath;
+  } catch (err) {
+    console.error("❌ IPFS download error:", err);
+    throw err;
+  }
+};

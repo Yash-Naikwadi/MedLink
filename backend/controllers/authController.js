@@ -59,7 +59,7 @@ export const loginUser = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
-    const token = generateToken({ id: user._id, email: user.email });
+    const token = generateToken({ id: user._id, role: "user", email: user.email });
     res.cookie("token", token, { httpOnly: true, secure: false, sameSite: "Lax" });
 
     res.status(200).json({
@@ -73,6 +73,23 @@ export const loginUser = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+// Logout
+export const logoutUser = async (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      // secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.status(200).json({ success: true, message: "Logged out successfully" });
+  } catch (err) {
+    console.error("Logout error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
