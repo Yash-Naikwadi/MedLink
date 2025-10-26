@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// 🧾 Individual Report Schema (now supports sharing with doctors)
+// 🧾 Individual Report Schema (user’s own uploads)
 const reportSchema = new mongoose.Schema(
   {
     fileName: { type: String, required: true },
@@ -8,19 +8,10 @@ const reportSchema = new mongoose.Schema(
     encryptionKey: { type: String, required: true }, // stored as hex
     reportHash: { type: String, required: true },
     uploadedAt: { type: Date, default: Date.now },
-
-    // 🩺 Track which doctors this report is shared with
-    sharedWith: [
-      {
-        doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "Doctor" },
-        sharedAt: { type: Date, default: Date.now },
-      },
-    ],
   },
   { _id: false }
 );
 
-// 👤 User Schema
 const userSchema = new mongoose.Schema(
   {
     username: { type: String, required: true, unique: true },
@@ -33,7 +24,7 @@ const userSchema = new mongoose.Schema(
       encryptedPrivateKey: { type: String, required: true },
     },
 
-    // 📁 Array of uploaded & encrypted reports
+    // 📁 Array of user's uploaded & encrypted reports
     reports: [reportSchema],
   },
   { timestamps: true }

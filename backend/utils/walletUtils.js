@@ -26,11 +26,11 @@ export const createWallet = async () => {
   const payload = `${iv.toString("hex")}:${authTag}:${encrypted}`;
 
   // Fund the wallet with 1 ETH from funder
-  const tx = await funder.sendTransaction({
-    to: wallet.address,
-    value: ethers.parseEther("1.0"),
-  });
-  await tx.wait();
+  // const tx = await funder.sendTransaction({
+  //   to: wallet.address,
+  //   value: ethers.parseEther("1.0"),
+  // });
+  // await tx.wait();
 
   return {
     address: wallet.address,

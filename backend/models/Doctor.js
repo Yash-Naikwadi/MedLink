@@ -9,15 +9,6 @@ const doctorSchema = new mongoose.Schema(
     specialization: { type: String, required: true },
     licenseNumber: { type: String, required: true, unique: true },
     hospitalName: { type: String },
-    // reports shared with the doctor by users
-    accessibleReports: [
-      {
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        reportHash: String,
-        ipfsURL: String,
-        accessGrantedAt: { type: Date, default: Date.now },
-      },
-    ],
   },
   { timestamps: true }
 );
@@ -35,6 +26,4 @@ doctorSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// ✅ Correct export
-const Doctor = mongoose.model("Doctor", doctorSchema);
-export default Doctor;
+export default mongoose.model("Doctor", doctorSchema);
