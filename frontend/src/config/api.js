@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4939';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 export const API_ENDPOINTS = {
   AUTH: {
@@ -14,12 +14,14 @@ export const API_ENDPOINTS = {
   REPORTS: {
     UPLOAD: `${API_BASE_URL}/api/report/upload`,
     GET_ALL: `${API_BASE_URL}/api/report/myreports`,
-    GET_BY_ID: (id) => `${API_BASE_URL}/api/report/${id}`,
+    VIEW: (reportHash) => `${API_BASE_URL}/api/report/view/${reportHash}`,
     SHARE: `${API_BASE_URL}/api/report/share`,
+    REVOKE: `${API_BASE_URL}/api/report/revoke`,
+    GET_PRESCRIPTION: (reportHash) => `${API_BASE_URL}/api/report/prescription/${reportHash}`,
   },
   DOCTOR_REPORTS: {
     GET_SHARED: `${API_BASE_URL}/api/doctor/reports/shared`,
-    ADD_FEEDBACK: `${API_BASE_URL}/api/doctor/reports/feedback`,
+    ADD_PRESCRIPTION: (reportHash) => `${API_BASE_URL}/api/doctor/reports/add-prescription/${reportHash}`,
   },
 };
 

@@ -47,9 +47,9 @@ const Login = () => {
       localStorage.setItem("userEmail", formData.email);
 
       if (formData.role === "doctor") {
-        navigate("/doctor-dashboard");
+        navigate("/doctor");
       } else {
-        navigate("/user-dashboard");
+        navigate("/user");
       }
     } catch (err) {
       setError(err.message || "Login failed");

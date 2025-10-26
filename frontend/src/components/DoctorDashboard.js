@@ -8,12 +8,15 @@ function DoctorDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("patients");
   const [selectedReport, setSelectedReport] = useState(null);
-  const [diagnosis, setDiagnosis] = useState("");
+  const [prescription, setPrescription] = useState("");
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [doctorEmail, setDoctorEmail] = useState("");
 
   useEffect(() => {
+    const email = localStorage.getItem("userEmail");
+    setDoctorEmail(email || "Doctor");
     fetchSharedReports();
   }, []);
 
@@ -26,26 +29,28 @@ function DoctorDashboard() {
     }
   };
 
-  const handleFeedbackSubmit = async (e) => {
+  const handlePrescriptionSubmit = async (e) => {
     e.preventDefault();
-    if (selectedReport && diagnosis.trim() !== "") {
+    if (selectedReport && prescription.trim() !== "") {
       setLoading(true);
       setError("");
 
       try {
-        await fetchAPI(API_ENDPOINTS.DOCTOR_REPORTS.ADD_FEEDBACK, {
-          method: "POST",
-          body: JSON.stringify({
-            reportId: selectedReport._id,
-            feedback: diagnosis,
-          }),
-        });
-        alert("Diagnosis/Feedback submitted successfully!");
-        setDiagnosis("");
+        await fetchAPI(
+          API_ENDPOINTS.DOCTOR_REPORTS.ADD_PRESCRIPTION(selectedReport.reportHash),
+          {
+            method: "PUT",
+            body: JSON.stringify({
+              prescription: prescription,
+            }),
+          }
+        );
+        alert("Prescription added successfully!");
+        setPrescription("");
         setSelectedReport(null);
         fetchSharedReports();
       } catch (err) {
-        setError(err.message || "Failed to submit feedback");
+        setError(err.message || "Failed to submit prescription");
       } finally {
         setLoading(false);
       }
@@ -67,7 +72,10 @@ function DoctorDashboard() {
     <div className="doctor-dashboard">
       {/* 🧭 NAVBAR */}
       <nav className="navbar">
-        <h1>Doctor Dashboard</h1>
+        <div className="navbar-left">
+          <h1>Doctor Dashboard</h1>
+          <span className="doctor-email">Dr. {doctorEmail.split('@')[0]}</span>
+        </div>
         <div>
           <button
             onClick={() => setActiveTab("patients")}
@@ -90,10 +98,10 @@ function DoctorDashboard() {
             <table>
               <thead>
                 <tr>
-                  <th>Patient Name</th>
+                  <th>Patient Email</th>
                   <th>Report Name</th>
                   <th>Date</th>
-                  <th>Status</th>
+                  <th>Prescription Status</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -107,18 +115,28 @@ function DoctorDashboard() {
                 ) : (
                   reports.map((report, index) => (
                     <tr key={index}>
-                      <td>{report.userId?.email || "N/A"}</td>
-                      <td>{report.fileName || "Report"}</td>
+                      <td>{report.userId?.email || "Patient"}</td>
+                      <td>{report.fileName || "Medical Report"}</td>
                       <td>
                         {new Date(report.createdAt).toLocaleDateString()}
                       </td>
-                      <td>{report.feedback ? "Reviewed" : "New"}</td>
+                      <td>
+                        {report.prescription ? (
+                          <span className="status-added">Added</span>
+                        ) : (
+                          <span className="status-pending">Pending</span>
+                        )}
+                      </td>
                       <td>
                         <button
                           className="btn-view"
-                          onClick={() => setSelectedReport(report)}
+                          onClick={() => {
+                            setSelectedReport(report);
+                            setPrescription(report.prescription || "");
+                          }}
                         >
-                          <MessageSquare size={16} /> Review
+                          <ClipboardCheck size={16} />
+                          {report.prescription ? " Update" : " Add Prescription"}
                         </button>
                       </td>
                     </tr>
@@ -128,30 +146,40 @@ function DoctorDashboard() {
             </table>
           </div>
 
-          {/* 🩺 FEEDBACK MODAL */}
           {selectedReport && (
             <div className="modal-bg">
               <div className="modal">
                 <h3>
-                  Review Report - {selectedReport.fileName || "Report"}
+                  {selectedReport.prescription ? "Update" : "Add"} Prescription
                 </h3>
-                <form onSubmit={handleFeedbackSubmit}>
+                <p className="modal-report-info">
+                  Patient: {selectedReport.userId?.email || "N/A"}<br />
+                  Report: {selectedReport.fileName || "Medical Report"}
+                </p>
+                <form onSubmit={handlePrescriptionSubmit}>
                   <textarea
                     required
-                    placeholder="Enter diagnosis or feedback..."
-                    value={diagnosis}
-                    onChange={(e) => setDiagnosis(e.target.value)}
+                    placeholder="Enter prescription details, diagnosis, and treatment recommendations..."
+                    value={prescription}
+                    onChange={(e) => setPrescription(e.target.value)}
                   ></textarea>
                   <div className="modal-buttons">
                     <button
                       type="button"
-                      onClick={() => setSelectedReport(null)}
+                      onClick={() => {
+                        setSelectedReport(null);
+                        setPrescription("");
+                      }}
                       className="cancel"
                     >
                       Cancel
                     </button>
                     <button type="submit" className="share" disabled={loading}>
-                      {loading ? "Submitting..." : "Submit Feedback"}
+                      {loading
+                        ? "Submitting..."
+                        : selectedReport.prescription
+                        ? "Update Prescription"
+                        : "Add Prescription"}
                     </button>
                   </div>
                 </form>

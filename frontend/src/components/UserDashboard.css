@@ -196,6 +196,30 @@ input[type="file"]::-webkit-file-upload-button:hover {
   transform: translateY(-2px);
 }
 
+.btn-revoke {
+  background-color: #ef4444;
+}
+
+.btn-revoke:hover {
+  background-color: #dc2626;
+  transform: translateY(-2px);
+}
+
+.btn-prescription {
+  background-color: #8b5cf6;
+}
+
+.btn-prescription:hover {
+  background-color: #7c3aed;
+  transform: translateY(-2px);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 /* 📋 TABLE */
 .report-history {
   margin-top: 2.5rem;
@@ -296,6 +320,25 @@ input[type="file"]::-webkit-file-upload-button:hover {
 }
 
 /* 🔄 ANIMATION */
+.prescription-modal {
+  max-width: 500px;
+}
+
+.prescription-content {
+  background-color: #334155;
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.prescription-content p {
+  color: #e2e8f0;
+  white-space: pre-wrap;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

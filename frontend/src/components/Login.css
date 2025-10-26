@@ -24,7 +24,7 @@ body {
 /* ---------- LEFT SIDE ---------- */
 .leftbox {
   flex: 1;
-  background-color: #0f766e;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
   position: relative;
   display: flex;
   justify-content: center;
@@ -136,7 +136,7 @@ body {
 }
 
 .auth-header span {
-  /* color: #00bcd4; */
+  color: #14b8a6;
 }
 
 /* Tabs */
@@ -156,7 +156,8 @@ body {
 
 .tabs a.active,
 .tabs a:hover {
-  color: #00bcd4;
+  color: #14b8a6;
+  text-shadow: 0 0 10px rgba(20, 184, 166, 0.5);
 }
 
 /* ---------- FORM BOX ---------- */
@@ -201,22 +202,36 @@ input {
 button {
   padding: 10px;
   border: none;
-  background-color: #ff3c00;
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
   color: white;
   border-radius: 6px;
   font-size: 15px;
   cursor: pointer;
-  transition: 0.3s;
+  transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 button:hover {
-  background-color: #00bcd4;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 a {
-  color: #00bcd4;
+  color: #14b8a6;
   text-decoration: none;
   font-size: 13px;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #0d9488;
 }
 
 p {
@@ -258,5 +273,9 @@ select {
 }
 
 select:focus {
-  outline: 2px solid #00bcd4;
+  outline: 2px solid #14b8a6;
+}
+
+input:focus {
+  outline: 2px solid #14b8a6;
 }
